@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import { useMagnetic } from '@/hooks/useMagnetic'
 import { useInView } from '@/hooks/useInView'
 
@@ -9,8 +9,20 @@ export default function Hero() {
   const blobRef = useRef<HTMLDivElement>(null)
   const [entered, setEntered] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  /** Narrow viewports: static gradients + no cursor-chase RAF (saves GPU / battery). */
+  const [liteAtmosphere, setLiteAtmosphere] = useState(false)
   const { onMove: onMagneticMove, onLeave: onMagneticLeave } = useMagnetic({ strength: 12 })
   const { ref: inViewRef, inView } = useInView<HTMLElement>({ threshold: 0.25, rootMargin: '0px 0px -25% 0px', once: false })
+
+  const ambientMotion = inView && !liteAtmosphere
+
+  useLayoutEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setLiteAtmosphere(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 90)
@@ -23,9 +35,9 @@ export default function Hero() {
     return () => clearTimeout(timer)
   }, [loaded])
 
-  // Cursor-reactive orb: runs only while hero is in-view
+  // Cursor-reactive orb: runs only while hero is in-view (skipped on narrow mobile — see liteAtmosphere)
   useEffect(() => {
-    if (!inView) return
+    if (!inView || liteAtmosphere) return
     let animationId: number
     let targetX = 0
     let targetY = 0
@@ -53,7 +65,7 @@ export default function Hero() {
       window.removeEventListener('mousemove', onMove)
       cancelAnimationFrame(animationId)
     }
-  }, [inView])
+  }, [inView, liteAtmosphere])
 
   const handleMagnetic = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => onMagneticMove(e), [onMagneticMove])
   const handleMagneticLeave = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => onMagneticLeave(e), [onMagneticLeave])
@@ -79,8 +91,10 @@ export default function Hero() {
           style={{
             borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
             background: 'linear-gradient(130deg, rgba(255,122,89,0.18) 0%, rgba(110,168,254,0.14) 48%, transparent 100%)',
-            filter: 'blur(76px)',
-            animation: inView ? 'morphBlob 10s ease-in-out infinite, breathe 8s ease-in-out infinite' : 'none',
+            filter: liteAtmosphere ? 'blur(42px)' : 'blur(76px)',
+            animation: ambientMotion
+              ? 'morphBlob 10s ease-in-out infinite, breathe 8s ease-in-out infinite'
+              : 'none',
             opacity: loaded ? 1 : 0,
             transition: 'opacity 2s ease',
           }}
@@ -89,8 +103,10 @@ export default function Hero() {
           className="absolute bottom-[8%] right-[6%] w-[48%] h-[48%] rounded-full"
           style={{
             background: 'radial-gradient(circle, rgba(110,168,254,0.24) 0%, transparent 72%)',
-            filter: 'blur(58px)',
-            animation: inView ? 'morphBlob 8s ease-in-out infinite reverse, floatSubtle 7s ease-in-out infinite' : 'none',
+            filter: liteAtmosphere ? 'blur(32px)' : 'blur(58px)',
+            animation: ambientMotion
+              ? 'morphBlob 8s ease-in-out infinite reverse, floatSubtle 7s ease-in-out infinite'
+              : 'none',
             opacity: loaded ? 0.84 : 0,
             transition: 'opacity 2.5s ease 0.3s',
           }}
@@ -99,8 +115,8 @@ export default function Hero() {
           className="absolute bottom-[30%] left-[8%] w-[30%] h-[30%] rounded-full"
           style={{
             background: 'radial-gradient(circle, rgba(255,122,89,0.3) 0%, transparent 72%)',
-            filter: 'blur(44px)',
-            animation: inView ? 'float 5s ease-in-out infinite' : 'none',
+            filter: liteAtmosphere ? 'blur(26px)' : 'blur(44px)',
+            animation: ambientMotion ? 'float 5s ease-in-out infinite' : 'none',
             opacity: loaded ? 0.75 : 0,
             transition: 'opacity 2s ease 0.5s',
           }}

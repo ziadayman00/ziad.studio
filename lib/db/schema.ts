@@ -35,3 +35,23 @@ export const projects = pgTable('projects', {
 
 export type ProjectRow = typeof projects.$inferSelect
 export type ProjectInsert = typeof projects.$inferInsert
+
+export const blogPosts = pgTable('blog_posts', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  excerpt: text('excerpt').notNull(),
+  content: text('content').notNull(),
+  coverImage: text('cover_image'),
+  category: text('category').notNull(),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  published: boolean('published').notNull().default(false),
+  featured: boolean('featured').notNull().default(false),
+  readingTime: integer('reading_time').notNull().default(5),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+})
+
+export type BlogPostRow = typeof blogPosts.$inferSelect
+export type BlogPostInsert = typeof blogPosts.$inferInsert

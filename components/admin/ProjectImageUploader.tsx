@@ -131,7 +131,7 @@ export default function ProjectImageUploader({ initialValue }: Props) {
         }}
         onDrop={onDrop}
         className={`${fieldShell} cursor-pointer select-none ${
-          dragOver ? 'border-[var(--coral)] bg-[var(--coral)]/10' : 'border-white/18 bg-black/20 hover:border-white/28'
+          dragOver ? 'border-[var(--coral)] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface-secondary))]' : 'border-[var(--border-strong)] bg-[var(--surface-secondary)] hover:border-[color-mix(in_srgb,var(--coral)_35%,var(--border-strong))]'
         }`}
         onClick={() => inputRef.current?.click()}
       >
@@ -144,14 +144,12 @@ export default function ProjectImageUploader({ initialValue }: Props) {
           onChange={onPick}
           disabled={busy}
         />
-        <p className="font-sans text-sm text-white/80">
-          {busy ? 'Uploading…' : 'Drop images here or click to browse'}
-        </p>
-        <p className="mt-2 font-sans text-xs text-white/40">Several files at once · JPEG, PNG, WebP, GIF, AVIF · max 12 MB each</p>
+        <p className="font-sans text-sm text-[var(--foreground)]">{busy ? 'Uploading…' : 'Drop images here or click to browse'}</p>
+        <p className="mt-2 font-sans text-xs text-[color-mix(in_srgb,var(--foreground)_45%,var(--lavender))]">Several files at once · JPEG, PNG, WebP, GIF, AVIF · max 12 MB each</p>
         <p className="mt-3 font-sans text-[11px] uppercase tracking-[0.16em] text-[var(--coral)]">First image = hero</p>
       </div>
 
-      {message ? <p className="font-sans text-sm text-amber-200/90">{message}</p> : null}
+      {message ? <p className="font-sans text-sm text-amber-800">{message}</p> : null}
 
       {urls.length > 0 ? (
         <ul className="space-y-2">
@@ -170,18 +168,18 @@ export default function ProjectImageUploader({ initialValue }: Props) {
                 setDragIndex(null)
               }}
               onDragEnd={() => setDragIndex(null)}
-              className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-2 pr-3"
+              className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 pr-3"
             >
-              <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-white/5">
+              <div className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- dynamic admin preview URLs */}
                 <img src={url} alt="" className="size-full object-cover" loading="lazy" />
                 {i === 0 ? (
-                  <span className="absolute bottom-0 left-0 right-0 bg-black/70 py-0.5 text-center font-sans text-[9px] uppercase tracking-wider text-white">
+                  <span className="absolute bottom-0 left-0 right-0 bg-[var(--graphite)] py-0.5 text-center font-sans text-[9px] uppercase tracking-wider text-white">
                     Hero
                   </span>
                 ) : null}
               </div>
-              <p className="min-w-0 flex-1 truncate font-mono text-[11px] text-white/50" title={url}>
+              <p className="min-w-0 flex-1 truncate font-mono text-[11px] text-[color-mix(in_srgb,var(--foreground)_45%,var(--lavender))]" title={url}>
                 {url}
               </p>
               <div className="flex shrink-0 items-center gap-1">
@@ -189,7 +187,7 @@ export default function ProjectImageUploader({ initialValue }: Props) {
                   type="button"
                   disabled={i === 0}
                   onClick={() => move(i, i - 1)}
-                  className="rounded-lg border border-white/15 px-2 py-1 text-xs text-white/70 hover:bg-white/10 disabled:opacity-30"
+                  className="rounded-lg border border-[var(--border-strong)] px-2 py-1 text-xs text-[var(--foreground)] transition-colors hover:bg-[var(--surface-secondary)] disabled:opacity-30"
                   aria-label="Move up"
                 >
                   ↑
@@ -198,7 +196,7 @@ export default function ProjectImageUploader({ initialValue }: Props) {
                   type="button"
                   disabled={i === urls.length - 1}
                   onClick={() => move(i, i + 1)}
-                  className="rounded-lg border border-white/15 px-2 py-1 text-xs text-white/70 hover:bg-white/10 disabled:opacity-30"
+                  className="rounded-lg border border-[var(--border-strong)] px-2 py-1 text-xs text-[var(--foreground)] transition-colors hover:bg-[var(--surface-secondary)] disabled:opacity-30"
                   aria-label="Move down"
                 >
                   ↓
@@ -206,7 +204,7 @@ export default function ProjectImageUploader({ initialValue }: Props) {
                 <button
                   type="button"
                   onClick={() => removeAt(i)}
-                  className="rounded-lg border border-red-400/30 px-2 py-1 text-xs text-red-200/90 hover:bg-red-500/15"
+                  className="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-800 transition-colors hover:bg-[color-mix(in_srgb,#fecaca_40%,transparent)]"
                   aria-label="Remove"
                 >
                   ✕
@@ -216,7 +214,7 @@ export default function ProjectImageUploader({ initialValue }: Props) {
           ))}
         </ul>
       ) : (
-        <p className="font-sans text-xs text-white/35">No images yet — upload at least one for the gallery and hero.</p>
+        <p className="font-sans text-xs text-[color-mix(in_srgb,var(--foreground)_40%,var(--lavender))]">No images yet — upload at least one for the gallery and hero.</p>
       )}
     </div>
   )

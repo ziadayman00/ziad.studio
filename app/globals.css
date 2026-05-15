@@ -175,7 +175,6 @@
 
   .cin-hoverlift {
     transition: transform 0.8s var(--ease-out-expo), box-shadow 0.8s var(--ease-out-expo), border-color 0.8s var(--ease-out-expo);
-    will-change: transform;
   }
 
   .cin-hoverlift:hover {
@@ -192,7 +191,6 @@
       opacity var(--duration-cinematic) var(--ease-out-expo),
       transform var(--duration-cinematic) var(--ease-out-expo);
     transition-delay: var(--reveal-delay, 0s);
-    will-change: transform, opacity;
   }
 
   .reveal-visible {
@@ -208,7 +206,6 @@
       opacity var(--duration-cinematic) var(--ease-out-expo),
       transform var(--duration-cinematic) var(--ease-out-expo);
     transition-delay: var(--reveal-delay, 0s);
-    will-change: transform, opacity;
   }
 
   .reveal-left.reveal-visible {
@@ -224,7 +221,6 @@
       opacity var(--duration-cinematic) var(--ease-out-expo),
       transform var(--duration-cinematic) var(--ease-out-expo);
     transition-delay: var(--reveal-delay, 0s);
-    will-change: transform, opacity;
   }
 
   .reveal-right.reveal-visible {
@@ -240,7 +236,6 @@
       opacity var(--duration-cinematic) var(--ease-out-expo),
       transform var(--duration-cinematic) var(--ease-out-expo);
     transition-delay: var(--reveal-delay, 0s);
-    will-change: transform, opacity;
   }
 
   .reveal-scale.reveal-visible {
@@ -259,7 +254,6 @@
     transform: translateY(110%);
     transition: transform var(--duration-cinematic) var(--ease-out-expo);
     transition-delay: var(--reveal-delay, 0s);
-    will-change: transform;
   }
 
   .text-reveal.reveal-visible > span {
@@ -315,7 +309,6 @@
     border-radius: 50%;
     filter: blur(60px);
     pointer-events: none;
-    will-change: transform;
   }
 
   /* Edge fade for marquee */
@@ -351,7 +344,6 @@
       radial-gradient(520px 420px at calc(var(--cursor-x) + 6%) calc(var(--cursor-y) + 10%), rgba(110, 168, 254, 0.12) 0%, rgba(110, 168, 254, 0.04) 44%, transparent 72%);
     opacity: 0.75;
     transition: opacity 0.6s var(--ease-out-expo);
-    will-change: background;
   }
 
   /* Grain/noise without assets (subtle, premium) */
@@ -396,7 +388,6 @@
       transform 0.9s var(--ease-out-expo),
       box-shadow 0.9s var(--ease-out-expo),
       border-color 0.9s var(--ease-out-expo);
-    will-change: transform;
   }
 
   .featured-artifact:hover {
@@ -424,10 +415,6 @@
   }
 
   /* Marquee pause (no React state) */
-  .marquee-track {
-    will-change: transform;
-  }
-
   .marquee-track:hover {
     animation-play-state: paused;
   }
@@ -443,7 +430,6 @@
   /* Intro video — theatrical settle + subtle screen sheen */
   .intro-stage-settle {
     transform-origin: center center;
-    will-change: transform;
     animation: introStageSettleAnim 5s var(--ease-out-expo) forwards;
   }
 
@@ -467,7 +453,6 @@
   .intro-clip-mask-wrap {
     transform: translate(-50%, -50%) scale(1);
     transform-origin: center center;
-    will-change: transform;
     backface-visibility: hidden;
     transition: transform 1.72s cubic-bezier(0.16, 1, 0.28, 1);
   }
@@ -644,13 +629,11 @@
 @keyframes homeSectionReveal {
   from {
     opacity: 0;
-    transform: translateY(20px);
-    filter: blur(4px);
+    transform: translateY(22px) scale(0.992);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
+    transform: translateY(0) scale(1);
   }
 }
 

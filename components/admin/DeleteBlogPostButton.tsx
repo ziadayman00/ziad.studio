@@ -1,13 +1,13 @@
 'use client'
 
-import { deleteProjectAction } from '@/lib/admin/actions'
+import { deleteBlogPostAction } from '@/lib/admin/actions'
 
-export default function DeleteProjectButton({ secret, id }: { secret: string; id: number }) {
+export default function DeleteBlogPostButton({ secret, id }: { secret: string; id: number }) {
   return (
     <form
-      action={deleteProjectAction.bind(null, secret, id)}
+      action={deleteBlogPostAction.bind(null, secret, id)}
       onSubmit={(e) => {
-        if (!confirm('Delete this project permanently from the database?')) {
+        if (!confirm('Delete this post permanently?')) {
           e.preventDefault()
         }
       }}

@@ -1,6 +1,6 @@
-import Link from 'next/link'
-
+import FeaturedProjectBlocks from '@/components/work/FeaturedProjectBlocks'
 import ProjectGrid from '@/components/work/ProjectGrid'
+import WorkVisualStrip from '@/components/work/WorkVisualStrip'
 import { getProjects } from '@/lib/projects'
 
 export const metadata = {
@@ -14,11 +14,12 @@ export default async function WorkPage() {
   const projects = await getProjects()
   const featured = projects.filter((p) => p.featured)
   const archive = projects.filter((p) => !p.featured)
+  const stripOrder = [...featured, ...archive]
 
   return (
     <section className="cin-section relative">
       <div className="max-w-7xl mx-auto px-6 md:px-10 pt-28 md:pt-32 pb-24 md:pb-28">
-        {/* Header */}
+        {/* Hero: hook + stats, then visual reel */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 xl:gap-12 items-end">
           <div className="xl:col-span-8 min-w-0">
             <div className="cin-kicker">Archive</div>
@@ -28,12 +29,15 @@ export default async function WorkPage() {
               like a
               <span style={{ color: 'var(--coral)' }}> scene</span>.
             </h1>
+            <p className="cin-body mt-5 max-w-2xl text-base md:text-lg">
+              Browse the frames first — each project is built as a digital object, not a template row.
+            </p>
           </div>
 
           <div className="xl:col-span-4 min-w-0">
             <div className="cin-panel p-7">
               <div className="flex items-center justify-between">
-                <span className="font-sans text-xs tracking-widest uppercase" style={{ color: 'var(--lavender)' }}>
+                <span className="font-sans text-xs tracking-widest uppercase" style={{ color: 'var(--foreground-muted)' }}>
                   Total artifacts
                 </span>
                 <span className="font-display font-black text-2xl" style={{ color: 'var(--foreground)' }}>
@@ -41,60 +45,38 @@ export default async function WorkPage() {
                 </span>
               </div>
               <p className="cin-body mt-4 text-sm">
-                A curated sequence of projects. Each one is treated like a digital object — not a thumbnail.
+                Each featured piece opens as a full scene. Archive stays a polaroid wall.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Featured */}
-        <section className="mt-16 md:mt-20">
-          <div className="cin-kicker mb-8">Featured</div>
-          <div className="grid grid-cols-1 gap-6 lg:gap-8">
-            {featured.map((project) => (
-              <Link
-                key={project.slug}
-                href={`/work/${project.slug}`}
-                className="group cin-panel cin-hoverlift block overflow-hidden"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-center p-7 md:p-9">
-                  <div className="md:col-span-7 min-w-0">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="w-2 h-2 rounded-full" style={{ background: project.color }} />
-                      <span className="font-sans text-[11px] tracking-widest uppercase" style={{ color: 'var(--lavender)' }}>
-                        {project.category}
-                      </span>
-                      <span className="font-sans text-[11px]" style={{ color: 'var(--lavender)', opacity: 0.7 }}>
-                        {project.year}
-                      </span>
-                    </div>
-                    <div className="mt-4 font-display font-black text-3xl md:text-5xl tracking-tight" style={{ color: 'var(--foreground)' }}>
-                      {project.title}
-                    </div>
-                    <p className="mt-4 cin-body text-sm md:text-base">{project.subtitle}</p>
-                  </div>
-                  <div className="md:col-span-5">
-                    <div className="relative rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface-secondary)]">
-                      <img
-                        src={project.images?.[0] ?? '/assets/hero-poster.jpg'}
-                        alt=""
-                        className="w-full h-44 md:h-52 object-cover object-top transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <div className="mt-10 md:mt-12 xl:mt-14 min-w-0 lg:-mx-2 xl:-mx-4">
+          <WorkVisualStrip projects={stripOrder} />
+        </div>
 
-        {/* Archive */}
-        <section className="mt-20 md:mt-24">
-          <div className="cin-kicker mb-8">Archive</div>
+        {/* Featured — cinema sheets */}
+        {featured.length > 0 ? (
+          <section className="mt-16 md:mt-24">
+            <div className="mb-8 sm:mb-10 md:mb-12">
+              <div className="cin-kicker">Featured</div>
+              <p className="mt-3 max-w-lg font-mono text-[10px] uppercase leading-relaxed tracking-[0.24em] text-[var(--foreground-muted)]">
+                Same frame for every spotlight — big type, top-anchored imagery, one door in.
+              </p>
+            </div>
+            <FeaturedProjectBlocks projects={featured} />
+          </section>
+        ) : null}
+
+        {/* Archive — polaroid wall (not a list) */}
+        <section className="mt-20 md:mt-28">
+          <div className="mb-2 flex flex-wrap items-baseline gap-4">
+            <div className="cin-kicker">Archive</div>
+            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--foreground-muted)]">wall</span>
+          </div>
           {archive.length === 0 ? (
             <div className="cin-panel p-8">
-              <p className="cin-body text-sm">More projects will appear here as they are added.</p>
+              <p className="cin-body text-sm">More prints will land here as you publish.</p>
             </div>
           ) : (
             <ProjectGrid projects={archive} />

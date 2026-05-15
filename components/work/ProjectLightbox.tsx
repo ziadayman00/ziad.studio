@@ -5,9 +5,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 type ProjectLightboxProps = {
   images: string[]
   title: string
+  /** Project accent for hover / focus rings */
+  accentColor?: string
 }
 
-export default function ProjectLightbox({ images, title }: ProjectLightboxProps) {
+export default function ProjectLightbox({ images, title, accentColor = 'var(--coral)' }: ProjectLightboxProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
 
@@ -45,7 +47,6 @@ export default function ProjectLightbox({ images, title }: ProjectLightboxProps)
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKeyDown)
 
-    // focus close button for quick escape
     setTimeout(() => closeBtnRef.current?.focus(), 0)
 
     return () => {
@@ -58,36 +59,34 @@ export default function ProjectLightbox({ images, title }: ProjectLightboxProps)
 
   return (
     <>
-      {/* Grid */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 xl:gap-6">
         {safeImages.map((img, i) => (
           <button
             key={`${img}-${i}`}
             type="button"
-            className="group rounded-3xl overflow-hidden border cin-hoverlift text-left"
-            style={{ borderColor: 'var(--border)', background: 'var(--surface-secondary)' }}
+            className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)] text-left shadow-[0_12px_40px_rgba(12,12,18,0.05)] transition-all duration-500 ease-[var(--ease-out-expo)] hover:border-[color-mix(in_srgb,var(--border-strong)_70%,var(--coral))] hover:shadow-[0_22px_60px_rgba(12,12,18,0.1)]"
             onClick={() => open(i)}
             aria-label={`Open image ${i + 1} of ${safeImages.length}`}
           >
+            <div
+              className="pointer-events-none absolute inset-0 z-[2] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              style={{
+                background: `linear-gradient(180deg, transparent 40%, color-mix(in srgb, ${accentColor} 22%, black) 100%)`,
+              }}
+            />
             <img
               src={img}
               alt={`${title} image ${i + 1}`}
-              className="w-full h-[260px] md:h-[300px] object-cover object-top"
+              className="relative z-0 aspect-[4/3] w-full object-cover object-top transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.04]"
             />
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  'linear-gradient(180deg, rgba(0,0,0,0.00) 0%, rgba(0,0,0,0.18) 100%)',
-                opacity: 0,
-                transition: 'opacity 0.6s var(--ease-out-expo)',
-              }}
-            />
+            <div className="pointer-events-none absolute inset-0 z-[1] intro-grain opacity-0 transition-opacity duration-500 group-hover:opacity-[0.18]" />
+            <span className="absolute bottom-3 left-3 z-[3] rounded-full border border-white/25 bg-black/45 px-2.5 py-1 font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-white/90 opacity-0 backdrop-blur-sm transition-all duration-500 group-hover:opacity-100">
+              Open
+            </span>
           </button>
         ))}
       </div>
 
-      {/* Lightbox */}
       {isOpen && current && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center px-4 py-10"
@@ -95,28 +94,25 @@ export default function ProjectLightbox({ images, title }: ProjectLightboxProps)
           aria-modal="true"
           aria-label="Image viewer"
           onMouseDown={(e) => {
-            // close only when clicking backdrop
             if (e.target === e.currentTarget) close()
           }}
           style={{
-            background: 'rgba(17,17,20,0.82)',
-            backdropFilter: 'blur(18px) saturate(1.2)',
-            WebkitBackdropFilter: 'blur(18px) saturate(1.2)',
+            background: 'color-mix(in srgb, var(--graphite) 78%, transparent)',
+            backdropFilter: 'blur(12px) saturate(1.15)',
+            WebkitBackdropFilter: 'blur(12px) saturate(1.15)',
           }}
         >
-          <div className="absolute inset-0 intro-grain" style={{ opacity: 0.25 }} />
+          <div className="pointer-events-none absolute inset-0 intro-grain opacity-[0.22]" />
 
-          {/* Controls */}
-          <div className="absolute top-5 left-5 right-5 flex items-center justify-between gap-4">
-            <div className="font-sans text-xs tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.55)' }}>
+          <div className="absolute left-5 right-5 top-5 z-10 flex items-center justify-between gap-4">
+            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--inverse-muted)]">
               {String((openIndex ?? 0) + 1).padStart(2, '0')} / {String(safeImages.length).padStart(2, '0')}
             </div>
             <button
               ref={closeBtnRef}
               type="button"
               onClick={close}
-              className="px-4 py-2 rounded-full border font-sans text-xs tracking-widest uppercase"
-              style={{ borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.04)' }}
+              className="rounded-full border border-[var(--inverse-border)] bg-[var(--inverse-surface)] px-4 py-2 font-sans text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--inverse-fg)] transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--coral)_45%,var(--inverse-border))] hover:text-[var(--coral)]"
             >
               Close
             </button>
@@ -125,8 +121,7 @@ export default function ProjectLightbox({ images, title }: ProjectLightboxProps)
           <button
             type="button"
             onClick={prev}
-            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 items-center justify-center w-11 h-11 rounded-full border"
-            style={{ borderColor: 'rgba(255,255,255,0.12)', color: 'white', background: 'rgba(255,255,255,0.05)' }}
+            className="absolute left-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--inverse-border)] bg-[var(--inverse-surface)] text-[var(--inverse-fg)] transition-colors duration-300 hover:border-[var(--coral)] hover:text-[var(--coral)] md:flex"
             aria-label="Previous image"
           >
             ←
@@ -135,47 +130,38 @@ export default function ProjectLightbox({ images, title }: ProjectLightboxProps)
           <button
             type="button"
             onClick={next}
-            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 items-center justify-center w-11 h-11 rounded-full border"
-            style={{ borderColor: 'rgba(255,255,255,0.12)', color: 'white', background: 'rgba(255,255,255,0.05)' }}
+            className="absolute right-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--inverse-border)] bg-[var(--inverse-surface)] text-[var(--inverse-fg)] transition-colors duration-300 hover:border-[var(--coral)] hover:text-[var(--coral)] md:flex"
             aria-label="Next image"
           >
             →
           </button>
 
-          {/* Image */}
           <div
-            className="relative w-full max-w-6xl"
+            className="relative z-[5] w-full max-w-6xl overflow-hidden rounded-[1.35rem] border border-[var(--inverse-border-strong)] bg-[var(--inverse-glass)]"
             style={{
-              borderRadius: 28,
-              overflow: 'hidden',
-              border: '1px solid rgba(255,255,255,0.10)',
-              boxShadow: '0 40px 160px rgba(0,0,0,0.55)',
-              background: 'rgba(255,255,255,0.02)',
+              boxShadow: `0 40px 120px rgba(0,0,0,0.45), 0 0 0 1px color-mix(in srgb, ${accentColor} 25%, transparent)`,
             }}
           >
             <img
               src={current}
               alt={`${title} full image ${(openIndex ?? 0) + 1}`}
-              className="w-full max-h-[78vh] object-contain"
+              className="max-h-[78vh] w-full object-contain"
               draggable={false}
             />
           </div>
 
-          {/* Mobile hint */}
-          <div className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3">
+          <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 md:hidden">
             <button
               type="button"
               onClick={prev}
-              className="px-4 py-2 rounded-full border font-sans text-xs tracking-widest uppercase"
-              style={{ borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.04)' }}
+              className="rounded-full border border-[var(--inverse-border)] bg-[var(--inverse-surface)] px-4 py-2 font-sans text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--inverse-fg)]"
             >
               Prev
             </button>
             <button
               type="button"
               onClick={next}
-              className="px-4 py-2 rounded-full border font-sans text-xs tracking-widest uppercase"
-              style={{ borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.04)' }}
+              className="rounded-full border border-[var(--inverse-border)] bg-[var(--inverse-surface)] px-4 py-2 font-sans text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--inverse-fg)]"
             >
               Next
             </button>
@@ -185,4 +171,3 @@ export default function ProjectLightbox({ images, title }: ProjectLightboxProps)
     </>
   )
 }
-

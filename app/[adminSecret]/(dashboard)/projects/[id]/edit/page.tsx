@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
-import PanelChrome from '@/components/admin/PanelChrome'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import ProjectForm from '@/components/admin/ProjectForm'
 import { projectToFormDefaults } from '@/lib/admin/form-defaults'
 import { requireAdmin } from '@/lib/admin/panel'
@@ -60,20 +60,23 @@ export default async function EditProjectPage({ params }: Props) {
   if (!project) notFound()
 
   return (
-    <div className="min-h-screen bg-[#0c0c10] text-white">
-      <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20">
-        <PanelChrome secret={adminSecret} title="Edit project" subtitle={`Editing “${project.title}”.`} />
-
-        <div className="mt-12">
-          <Link href={`/${adminSecret}`} className="font-sans text-xs uppercase tracking-[0.18em] text-white/40 transition-colors hover:text-white">
-            ← Back to list
+    <>
+      <AdminPageHeader
+        title="Edit project"
+        subtitle={`Editing “${project.title}”.`}
+        actions={
+          <Link
+            href={`/${adminSecret}`}
+            className="rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-5 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] transition-colors hover:border-[color-mix(in_srgb,var(--coral)_35%,var(--border-strong))]"
+          >
+            ← Overview
           </Link>
-        </div>
+        }
+      />
 
-        <div className="mt-10">
-          <ProjectForm secret={adminSecret} mode="edit" projectId={project.id} defaults={projectToFormDefaults(project)} />
-        </div>
+      <div className="mt-10">
+        <ProjectForm secret={adminSecret} mode="edit" projectId={project.id} defaults={projectToFormDefaults(project)} />
       </div>
-    </div>
+    </>
   )
 }

@@ -1,4 +1,4 @@
-import ProjectCard from './ProjectCard'
+import ArchiveMasonry from './ArchiveMasonry'
 import type { Project } from '@/lib/projects'
 
 type ProjectGridProps = {
@@ -6,11 +6,5 @@ type ProjectGridProps = {
 }
 
 export default function ProjectGrid({ projects }: ProjectGridProps) {
-  return (
-    <div className="border-t border-[var(--border)]">
-      {projects.map((project, i) => (
-        <ProjectCard key={project.id} project={project} index={i} />
-      ))}
-    </div>
-  )
+  return <ArchiveMasonry projects={projects} />
 }

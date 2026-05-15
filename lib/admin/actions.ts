@@ -7,8 +7,8 @@ import { eq, ne } from 'drizzle-orm'
 import { assertPanelSecret } from '@/lib/admin/panel'
 import { clearAdminSession, getAdminSession, setAdminSession } from '@/lib/auth/admin-session'
 import { getDb } from '@/lib/db'
-import { ensureProjectsSchemaIfNeeded } from '@/lib/db/ensure-schema'
-import { projects as projectsTable } from '@/lib/db/schema'
+import { ensureBlogSchemaIfNeeded, ensureProjectsSchemaIfNeeded } from '@/lib/db/ensure-schema'
+import { blogPosts as blogPostsTable, projects as projectsTable } from '@/lib/db/schema'
 import { slugify } from '@/lib/slug'
 
 const PALETTE = ['#FF7A59', '#6EA8FE', '#8D8BA7', '#D67E6D', '#8AA2D4', '#B286A7']
@@ -247,4 +247,159 @@ export async function deleteProjectAction(secret: string, id: number, formData?:
   revalidatePath('/')
   revalidatePath('/work')
   redirect(`/${secret}`)
+}
+
+export async function createBlogPostAction(secret: string, formData: FormData) {
+  try {
+    await auth(secret)
+  } catch {
+    redirect(`/${secret}/login`)
+  }
+
+  await ensureBlogSchemaIfNeeded()
+  const db = getDb()
+  if (!db) redirect(`/${secret}/blog`)
+
+  const title = String(formData.get('title') ?? '').trim()
+  if (!title) redirect(`/${secret}/blog/new`)
+
+  let slug = String(formData.get('slug') ?? '').trim()
+  if (!slug) slug = slugify(title)
+  else slug = slugify(slug)
+
+  const excerpt = String(formData.get('excerpt') ?? '').trim()
+  const content = String(formData.get('content') ?? '').trim()
+  const category = String(formData.get('category') ?? '').trim() || 'Notes'
+  const coverImage = normalizeUrl(String(formData.get('coverImage') ?? ''))
+  const tags = splitComma(String(formData.get('tags') ?? ''))
+  const published = formData.get('published') === 'on'
+  const featured = formData.get('featured') === 'on'
+  const readingTimeRaw = Number.parseInt(String(formData.get('readingTime') ?? ''), 10)
+  const readingTime = Number.isFinite(readingTimeRaw) && readingTimeRaw > 0 ? readingTimeRaw : 5
+
+  if (!excerpt || !content) redirect(`/${secret}/blog/new`)
+
+  let uniqueSlug = slug
+  for (let bump = 0; bump < 20; bump++) {
+    const exists = await db.select({ id: blogPostsTable.id }).from(blogPostsTable).where(eq(blogPostsTable.slug, uniqueSlug)).limit(1)
+    if (exists.length === 0) break
+    uniqueSlug = `${slug}-${bump + 2}`
+  }
+
+  const now = new Date()
+  await db.insert(blogPostsTable).values({
+    slug: uniqueSlug,
+    title,
+    excerpt,
+    content,
+    coverImage: coverImage ?? null,
+    category,
+    tags,
+    published,
+    featured,
+    readingTime,
+    publishedAt: published ? now : null,
+  })
+
+  revalidatePath('/blog')
+  revalidatePath(`/blog/${uniqueSlug}`)
+  redirect(`/${secret}/blog`)
+}
+
+export async function updateBlogPostAction(secret: string, id: number, formData: FormData) {
+  try {
+    await auth(secret)
+  } catch {
+    redirect(`/${secret}/login`)
+  }
+
+  await ensureBlogSchemaIfNeeded()
+  const db = getDb()
+  if (!db) redirect(`/${secret}/blog`)
+
+  const title = String(formData.get('title') ?? '').trim()
+  if (!title) redirect(`/${secret}/blog/${id}/edit`)
+
+  let slug = String(formData.get('slug') ?? '').trim()
+  slug = slug ? slugify(slug) : slugify(title)
+
+  const excerpt = String(formData.get('excerpt') ?? '').trim()
+  const content = String(formData.get('content') ?? '').trim()
+  const category = String(formData.get('category') ?? '').trim() || 'Notes'
+  const coverImage = normalizeUrl(String(formData.get('coverImage') ?? ''))
+  const tags = splitComma(String(formData.get('tags') ?? ''))
+  const published = formData.get('published') === 'on'
+  const featured = formData.get('featured') === 'on'
+  const readingTimeRaw = Number.parseInt(String(formData.get('readingTime') ?? ''), 10)
+  const readingTime = Number.isFinite(readingTimeRaw) && readingTimeRaw > 0 ? readingTimeRaw : 5
+
+  if (!excerpt || !content) redirect(`/${secret}/blog/${id}/edit`)
+
+  const existing = await db.select().from(blogPostsTable).where(eq(blogPostsTable.id, id)).limit(1)
+  const prev = existing[0]
+  if (!prev) redirect(`/${secret}/blog`)
+
+  const others = await db
+    .select({ slug: blogPostsTable.slug })
+    .from(blogPostsTable)
+    .where(ne(blogPostsTable.id, id))
+    .limit(500)
+
+  const taken = new Set(others.map((r) => r.slug))
+  let uniqueSlug = slug
+  let bump = 0
+  while (taken.has(uniqueSlug)) {
+    bump += 1
+    uniqueSlug = `${slug}-${bump + 1}`
+    if (bump > 40) break
+  }
+
+  let publishedAt = prev.publishedAt
+  if (published && !publishedAt) publishedAt = new Date()
+  if (!published) publishedAt = null
+
+  await db
+    .update(blogPostsTable)
+    .set({
+      slug: uniqueSlug,
+      title,
+      excerpt,
+      content,
+      coverImage: coverImage ?? null,
+      category,
+      tags,
+      published,
+      featured,
+      readingTime,
+      publishedAt,
+      updatedAt: new Date(),
+    })
+    .where(eq(blogPostsTable.id, id))
+
+  revalidatePath('/blog')
+  revalidatePath(`/blog/${prev.slug}`)
+  revalidatePath(`/blog/${uniqueSlug}`)
+  redirect(`/${secret}/blog`)
+}
+
+export async function deleteBlogPostAction(secret: string, id: number, formData?: FormData) {
+  void formData
+  try {
+    await auth(secret)
+  } catch {
+    redirect(`/${secret}/login`)
+  }
+
+  await ensureBlogSchemaIfNeeded()
+  const db = getDb()
+  if (!db) redirect(`/${secret}/blog`)
+
+  const rows = await db.select({ slug: blogPostsTable.slug }).from(blogPostsTable).where(eq(blogPostsTable.id, id)).limit(1)
+  const slug = rows[0]?.slug
+
+  await db.delete(blogPostsTable).where(eq(blogPostsTable.id, id))
+
+  revalidatePath('/blog')
+  if (slug) revalidatePath(`/blog/${slug}`)
+  redirect(`/${secret}/blog`)
 }

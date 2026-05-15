@@ -34,8 +34,30 @@ CREATE TABLE IF NOT EXISTS "projects" (
 );
 `
 
+const BLOG_POSTS_DDL = `
+CREATE TABLE IF NOT EXISTS "blog_posts" (
+  "id" serial PRIMARY KEY NOT NULL,
+  "slug" text NOT NULL UNIQUE,
+  "title" text NOT NULL,
+  "excerpt" text NOT NULL,
+  "content" text NOT NULL,
+  "cover_image" text,
+  "category" text NOT NULL,
+  "tags" jsonb NOT NULL DEFAULT '[]'::jsonb,
+  "published" boolean NOT NULL DEFAULT false,
+  "featured" boolean NOT NULL DEFAULT false,
+  "reading_time" integer NOT NULL DEFAULT 5,
+  "published_at" timestamptz,
+  "created_at" timestamptz DEFAULT now(),
+  "updated_at" timestamptz DEFAULT now()
+);
+`
+
 let ensureLock: Promise<void> | null = null
 let schemaReady = false
+
+let blogEnsureLock: Promise<void> | null = null
+let blogSchemaReady = false
 
 /**
  * Creates `public.projects` if missing (same DDL as lib/db/init-projects.sql).
@@ -88,7 +110,50 @@ export async function ensureProjectsSchemaIfNeeded(): Promise<void> {
   return ensureLock
 }
 
+/**
+ * Creates `public.blog_posts` if missing.
+ * Same pattern as ensureProjectsSchemaIfNeeded — idempotent, singleton-locked.
+ */
+export async function ensureBlogSchemaIfNeeded(): Promise<void> {
+  if (blogSchemaReady) return
+  if (blogEnsureLock) return blogEnsureLock
+
+  blogEnsureLock = (async () => {
+    try {
+      const raw = process.env.DATABASE_URL ?? ''
+      const url = normalizeDatabaseUrl(raw)
+      if (!url) return
+
+      const sql = postgres(url, { ...getPostgresOptions(url), max: 1 })
+      try {
+        const rows = await sql<{ ok: boolean }[]>`
+          select exists (
+            select 1 from information_schema.tables
+            where table_schema = 'public' and table_name = 'blog_posts'
+          ) as ok
+        `
+        if (rows[0]?.ok) {
+          blogSchemaReady = true
+          return
+        }
+        await sql.unsafe(BLOG_POSTS_DDL)
+        blogSchemaReady = true
+      } finally {
+        await sql.end({ timeout: 5 }).catch(() => {})
+      }
+    } catch (e) {
+      console.error('[db] ensureBlogSchemaIfNeeded failed', e)
+      blogSchemaReady = false
+    } finally {
+      blogEnsureLock = null
+    }
+  })()
+
+  return blogEnsureLock
+}
+
 /** Call after env hot-reload in dev if DATABASE_URL changes */
 export function resetProjectsSchemaCache() {
   schemaReady = false
+  blogSchemaReady = false
 }
